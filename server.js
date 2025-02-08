@@ -48,7 +48,7 @@ const sendOtpEmail = async (toEmail, otp, purpose) => {
         <title>${subject}</title>
         <link href="https://fonts.googleapis.com/css2?family=Signika:wght@300;400;600&display=swap" rel="stylesheet">
         <style>
-          body {
+          * {
             font-family: 'Signika', sans-serif;
             background: linear-gradient(135deg, #1E1E2E, #2A2A3C);
             color: #ffffff;
