@@ -1,12 +1,16 @@
 import express from "express";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 const app = express();
 app.use(express.json());
 
 let otpStore = {};
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const sendOtpEmail = async (toEmail, otp, purpose) => {
   const transporter = nodemailer.createTransport({
@@ -118,6 +122,10 @@ const sendOtpEmail = async (toEmail, otp, purpose) => {
     throw new Error("Failed to send OTP email");
   }
 };
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 app.post("/send-otp", async (req, res) => {
     const { email, purpose } = req.body;
