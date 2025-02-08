@@ -1,16 +1,17 @@
 import express from "express";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import path from "path";
 import { fileURLToPath } from "url";
 
 dotenv.config();
 const app = express();
 app.use(express.json());
 
-let otpStore = {};
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+let otpStore = {};
 
 const sendOtpEmail = async (toEmail, otp, purpose) => {
   const transporter = nodemailer.createTransport({
@@ -128,28 +129,27 @@ app.get("/", (req, res) => {
 });
 
 app.post("/send-otp", async (req, res) => {
-    const { email, purpose } = req.body;
-    if (!email) return res.status(400).json({ message: "Email is required!" });
+  const { email, purpose } = req.body;
+  if (!email) return res.status(400).json({ message: "Email is required!" });
 
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    otpStore[email] = otp;
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  otpStore[email] = otp;
 
-    try {
-        await sendOtpEmail(email, otp, purpose);
-        res.json({ message: "✅ OTP sent successfully!" });
-    } catch (error) {
-        res.status(500).json({ message: "❌ Failed to send OTP" });
-    }
+  try {
+    await sendOtpEmail(email, otp, purpose);
+    res.json({ message: "✅ OTP sent successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: "❌ Failed to send OTP" });
+  }
 });
 
 app.post("/verify-otp", (req, res) => {
-    const { email, otp } = req.body;
-    if (otpStore[email] && otpStore[email] == otp) {
-        delete otpStore[email];
-        return res.json({ message: "✅ Verification successful!" });
-    }
-    res.status(400).json({ message: "❌ Invalid OTP. Try again!" });
+  const { email, otp } = req.body;
+  if (otpStore[email] && otpStore[email] === otp) {
+    delete otpStore[email];
+    return res.json({ message: "✅ Verification successful!" });
+  }
+  res.status(400).json({ message: "❌ Invalid OTP. Try again!" });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+export default app;
