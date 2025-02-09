@@ -1,6 +1,7 @@
 import express from "express";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -12,6 +13,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let otpStore = {};
+
+const emailFile = path.join(__dirname, "email.json");
+const loadEmails = () => {
+  if (!fs.existsSync(emailFile)) fs.writeFileSync(emailFile, "[]");
+  return JSON.parse(fs.readFileSync(emailFile, "utf-8"));
+};
 
 const sendOtpEmail = async (toEmail, otp, purpose) => {
   const transporter = nodemailer.createTransport({
@@ -128,6 +135,13 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+app.post("/check-email", (req, res) => {
+  const { email } = req.body;
+  const registeredEmails = loadEmails();
+  const exists = registeredEmails.includes(email);
+  res.json({ exists });
+});
+
 app.post("/send-otp", async (req, res) => {
   const { email, purpose } = req.body;
   if (!email) return res.status(400).json({ message: "Email is required!" });
@@ -147,9 +161,29 @@ app.post("/verify-otp", (req, res) => {
   const { email, otp } = req.body;
   if (otpStore[email] && otpStore[email] === otp) {
     delete otpStore[email];
+
+    const registeredEmails = loadEmails();
+    if (!registeredEmails.includes(email)) {
+      registeredEmails.push(email);
+      fs.writeFileSync(emailFile, JSON.stringify(registeredEmails, null, 2));
+    }
+
     return res.json({ message: "✅ Verification successful!" });
   }
   res.status(400).json({ message: "❌ Invalid OTP. Try again!" });
+});
+
+app.post("/save-email", (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: "Email is required!" });
+
+  const registeredEmails = loadEmails();
+  if (!registeredEmails.includes(email)) {
+    registeredEmails.push(email);
+    fs.writeFileSync(emailFile, JSON.stringify(registeredEmails, null, 2));
+  }
+
+  res.json({ message: "✅ Email registered successfully!" });
 });
 
 export default app;
