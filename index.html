@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -121,6 +122,14 @@
             let data = await res.json();
             showToast(data.message);
             if (res.ok) {
+                // ✅ Save verified email
+                await fetch("/save-email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email }),
+                });
+
+                showToast("✅ Email verified & saved!");
                 setTimeout(() => {
                     window.location.href = "scroll.html";
                 }, 3000);
